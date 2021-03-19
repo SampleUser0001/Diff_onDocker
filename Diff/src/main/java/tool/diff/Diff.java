@@ -15,11 +15,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class App {
-
-    public static final Path OUTPUT_FILE = Paths.get(System.getProperty("user.dir"),"files","output.tsv");
-
-    public static final Path INPUT_DIR = Paths.get(System.getProperty("user.dir"),"files","diffs");
+public class Diff {
 
     private static List<String> allList = new ArrayList<String>();
     private static Map<String,List<String>> filesMap = new LinkedHashMap<String,List<String>>();
@@ -29,13 +25,13 @@ public class App {
         Path inputDir = Paths.get(args[argsIndex++]);
         Path outputFile = Paths.get(args[argsIndex++]);
 
-        try(Stream<Path> walk = Files.walk(INPUT_DIR, FileVisitOption.FOLLOW_LINKS)){
+        try(Stream<Path> walk = Files.walk(inputDir, FileVisitOption.FOLLOW_LINKS)){
             walk.sorted(Comparator.reverseOrder())
                 .forEach( path -> {
                     try {
                         if(!Files.isDirectory(path)) {
                             allList.addAll(Files.lines(path).collect(Collectors.toList()));
-                            filesMap.put(INPUT_DIR.relativize(path).toString(), Files.readAllLines(path));
+                            filesMap.put(inputDir.relativize(path).toString(), Files.readAllLines(path));
                         }
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -45,21 +41,22 @@ public class App {
         allList = allList.stream().distinct().collect(Collectors.toList());
         try {
 
+            _builder.append("\t");
             StringBuilder _builder = new StringBuilder();
             for(String filePath : filesMap.keySet()) {
-                _builder.append(filePath+"    ");
+                _builder.append(filePath+"\t");
             }
             _builder.append("\r\n");
 
             for(String word : allList) {
-                _builder.append(word).append("    ");
+                _builder.append(word).append("\t");
                 for(List<String> list : filesMap.values()) {
-                    writeOrNot(_builder , word , list).append("    ");
+                    writeOrNot(_builder , word , list).append("\t");
                 }
                 _builder.append("\r\n");
             }
 
-            BufferedWriter writer = Files.newBufferedWriter(OUTPUT_FILE,StandardCharsets.UTF_8);
+            BufferedWriter writer = Files.newBufferedWriter(outputFile,StandardCharsets.UTF_8);
             writer.write(_builder.toString());
             writer.close();
 
