@@ -1,0 +1,7 @@
+version: '3'
+services:
+  maven:
+    build: .
+    volumes:
+      - .:/usr/src/mymaven
+    command: sh mvn_command.sh
